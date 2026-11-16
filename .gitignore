@@ -1,0 +1,13 @@
+# generowane wyniki
+wyniki/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+
+# materiały prowadzącego, nie publikujemy w publicznym repo
+zab_cz_1.pdf
+exercises_cwiczenia/
+
+# lokalna wersja robocza (tylko do podglądu)
+wersja_robocza/
