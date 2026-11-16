@@ -76,13 +76,6 @@ python sekcja1_struktura.py     # tylko swoja sekcja
 python main.py                  # całość -> wyniki/wydruk.txt
 ```
 
-Jeśli Windows blokuje numpy („Zasady kontroli aplikacji zablokowały ten plik”), uruchamiamy przez Docker:
-
-```bash
-docker build -t zab-proj1 .
-docker run --rm -v "%cd%:/work" zab-proj1 python main.py
-```
-
 ## Jak pracujemy w Git
 
 1. Jednorazowo: `git clone <link do repo>`.
@@ -105,7 +98,7 @@ Przy każdym kroku piszemy w komentarzu, skąd pochodzi:
 - `WŁASNE`: nie ma tego ani w wykładzie, ani w kodach prowadzącego.
 
 Uwaga: w `exercises_cwiczenia/` **nie ma kodu do imputacji**. Wykład odsyła do plików `S03MechTesting01/02`,
-`S05Imp01.py` i `S05MultipleImputation001`. Jeśli ktoś je ma z Teams/Moodle, niech je wyśle grupie (nie do publicznego repo).
+`S05Imp01.py` i `S05MultipleImputation001`.
 
 ## Co oddajemy (MS Teams)
 
