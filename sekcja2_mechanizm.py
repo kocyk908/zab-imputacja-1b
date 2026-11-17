@@ -36,6 +36,8 @@ def uruchom(df):
     # ... kod osoby 2 ...
     return wyniki
 
+    ###test czt git działa
+
 
 if __name__ == "__main__":
     uruchom(wczytaj_dane())
