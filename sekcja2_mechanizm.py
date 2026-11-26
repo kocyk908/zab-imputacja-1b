@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-SEKCJA 2: MECHANIZM BRAKÓW DANYCH                                     OSOBA 2
-Punkt 2 polecenia: zależność między prawdopodobieństwem braku a pozostałymi cechami;
-które cechy pozwalają skorygować oszacowania przez imputację.
-"""
+
 import pandas as pd
 import numpy as np
 import statsmodels.api as sm
@@ -13,7 +9,6 @@ from scipy import stats
 from wspolne import wczytaj_dane
 
 def cramers_v(ct):
-    """Oblicza miarę asocjacji V Craméra dla tablicy kontyngencji."""
     chi2 = stats.chi2_contingency(ct)[0]
     n = ct.sum().sum()
     return np.sqrt(chi2 / (n * (min(ct.shape) - 1)))
@@ -24,7 +19,6 @@ def uruchom(df):
     
     testy_lista = []
 
-    # 1. Metoda I (Balicki) - zmienna ciągła (Test t-Studenta dla wariancji niejednorodnych/Welcha)
     age_m0 = df[df['M'] == 0]['age']
     age_m1 = df[df['M'] == 1]['age']
     t_stat, p_val_t = stats.ttest_ind(age_m0, age_m1, equal_var=False)
@@ -38,7 +32,6 @@ def uruchom(df):
     })
     print(f"Metoda I: Test t-Studenta dla 'age': t={t_stat:.4f}, p-val={p_val_t:.4e}")
 
-    # 2. Metoda II (Balicki) - cechy skokowe (Chi-kwadrat i V Cramera)
     cechy_skokowe = ['education', 'house_loan', 'poutcome', 'contact']
     for col in cechy_skokowe:
         ct = pd.crosstab(df['M'], df[col])
@@ -55,20 +48,16 @@ def uruchom(df):
 
     wyniki["tab_testy_brakow"] = pd.DataFrame(testy_lista)
 
-    # 3. Model logitowy skłonności do braków danych (propensity model dla M=1)
     print("\nEstymacja modelu logitowego P(M=1|X):")
-    # Formuła bez składnika kwadratowego wieku
     formula_m = "M ~ age + C(education) + C(house_loan) + C(poutcome) + C(contact)"
     model_brakow = smf.glm(formula_m, data=df, family=sm.families.Binomial()).fit()
     print(model_brakow.summary())
     wyniki["model_brakow"] = model_brakow
 
-    # 4. Sprawdzenie zmiennej pomocniczej 'education'
     ct_edy = pd.crosstab(df[df['M'] == 0]['y_newdeposit'], df[df['M'] == 0]['education'])
     chi2_edy, p_edy, _, _ = stats.chi2_contingency(ct_edy)
     print(f"\nTest wpływu zmiennej 'education' na target Y (tylko obserwacje pełne M=0): p-val = {p_edy:.4e}")
 
-    # 5. Podsumowanie mechanizmu i definicja zmiennych do modelu imputacyjnego
     print("\nWNIOSEK:")
     print("Testy jednowymiarowe oraz model logitowy wykazują istotny wpływ ")
     print("wieku ('age') oraz kanału ('contact') na prawdopodobieństwo braku danych (M).")
@@ -76,7 +65,6 @@ def uruchom(df):
     print("Zmienna 'education' istotnie determinuje samą zmienną 'y_newdeposit', stanowiąc")
     print("doskonałą zmienną pomocniczą do korekty oszacowań podczas imputacji.")
     
-    # Składamy prawą stronę równania bez I(age**2)
     formula_imp = "C(contact) + age + C(house_loan) + C(poutcome) + C(education)"
     wyniki["zmienne_imputacji"] = formula_imp
     
