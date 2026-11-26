@@ -61,9 +61,10 @@ def uruchom(df):
     print("\nWNIOSEK:")
     print("Testy jednowymiarowe oraz model logitowy wykazują istotny wpływ ")
     print("wieku ('age') oraz kanału ('contact') na prawdopodobieństwo braku danych (M).")
-    print("Stanowi to podstawę do odrzucenia założenia MCAR na rzecz mechanizmu MAR.")
+    print("Wyklucza to MCAR, lecz nie pozwala rozstrzygnąć między MAR a MNAR,")
+    print("więc przyjęcie MAR pozostaje założeniem.")
     print("Zmienna 'education' istotnie determinuje samą zmienną 'y_newdeposit', stanowiąc")
-    print("doskonałą zmienną pomocniczą do korekty oszacowań podczas imputacji.")
+    print("dobrą zmienną pomocniczą do korekty oszacowań podczas imputacji.")
     
     formula_imp = "C(contact) + age + C(house_loan) + C(poutcome) + C(education)"
     wyniki["zmienne_imputacji"] = formula_imp

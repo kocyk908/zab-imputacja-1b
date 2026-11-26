@@ -1,37 +1,22 @@
 # -*- coding: utf-8 -*-
-"""
-SEKCJA 1: STRUKTURA DANYCH                                            OSOBA 1
-Punkt 1 polecenia: analiza struktury (cechy ciągłe i skokowe), graficzna ocena wyników badania,
-zakres i rozkład braków danych.
 
-jak w wykładzie (zab_cz_1), s. 17-18 (histogram, wykres pudełkowy), s. 46 (skale pomiarowe),
-s. 73-74 (macierz braków), s. 89-90 (wzorzec braków)
-wykresy (sns.histplot) jak w kodzie "DM_Approach_py (1).ipynb"
-
-Dodatkowe odwołania użyte w implementacji:
-jak w wykładzie (zab_cz_1), s. 14 (wykres słupkowy), s. 35, 37, 47-48, 70 (jakość danych,
-wartości odstające: reguła 3 sigm i reguła IQR), s. 75-81, 107-108 (skutki braków danych:
-mniejsza moc testu, możliwe obciążenie CC)
-
-Uruchomienie samej sekcji:  python sekcja1_struktura.py
-"""
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import pandas as pd  # noqa: E402
-import seaborn as sns  # noqa: E402
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
 
-from wspolne import OUT_DIR, wczytaj_dane  # noqa: E402,F401
+from wspolne import OUT_DIR, wczytaj_dane
 
 # Dodatkowe importy dla obliczeń statystycznych i formatowania wykresów
-import numpy as np  # noqa: E402
-from matplotlib.gridspec import GridSpec  # noqa: E402
-from matplotlib.patches import Patch  # noqa: E402
-from matplotlib.ticker import FuncFormatter  # noqa: E402
-from scipy import stats  # noqa: E402
+import numpy as np
+from matplotlib.gridspec import GridSpec
+from matplotlib.patches import Patch
+from matplotlib.ticker import FuncFormatter
+from scipy import stats
 
-from wspolne import ALPHA  # noqa: E402
+from wspolne import ALPHA
 
 # --- konfiguracja analizy struktury i braków ---
 CECHA_CIAGLA = "age"
@@ -100,18 +85,14 @@ STYL = {
 
 
 def _liczba(x, wzor="{:.1f}"):
-    """Formatuje liczbę na wykresie z przecinkiem dziesiętnym."""
     return wzor.format(x).replace(".", ",").replace("-", "\u2212")
 
 
 def _calkowita(n):
-    """Formatuje liczbę całkowitą ze spacją jako separatorem tysięcy."""
     return f"{int(n):,}".replace(",", " ")
 
 
 def _przedzial_wilsona(k, n, alpha=ALPHA):
-    """95% przedział ufności Wilsona dla proporcji k/n.
-    Daje dokładniejsze pokrycie niż przybliżenie Walda dla mniejszych podgrup (tu: kanał B)."""
     if n == 0:
         return np.nan, np.nan
     z = stats.norm.ppf(1 - alpha / 2)
@@ -126,9 +107,6 @@ def _przedzial_wilsona(k, n, alpha=ALPHA):
 # 1. TABELE STATYSTYCZNE
 # =====================================================================================
 def statystyki_age(df):
-    """Statystyki opisowe cechy ciągłej age (ogółem oraz wg statusu braku M=0 i M=1)
-    wraz z kontrolą wartości odstających wg reguły kwantylowej i reguły 3 sigm.
-   """ # jak w wykładzie (zab_cz_1), s. 17-18, 47, 70.
     grupy = [
         ("Ogółem", df[CECHA_CIAGLA]),
         ("Obserwowane (M=0)", df.loc[df["M"] == 0, CECHA_CIAGLA]),
@@ -139,8 +117,7 @@ def statystyki_age(df):
         q1, me, q3 = s.quantile([0.25, 0.50, 0.75])
         iqr = q3 - q1
         mean, sd = s.mean(), s.std(ddof=1)
-        # Reguła kwantylowa [Q1 - 1.5*IQR, Q3 + 1.5*IQR] i reguła trzech sigm |x - mu| > 3*sigma:
-        # jak w wykładzie (zab_cz_1), s. 47, 70
+        # Reguła kwantylowa [Q1 - 1.5*IQR, Q3 + 1.5*IQR] i reguła trzech sigm |x - mu| > 3*sigma
         out_iqr = int(((s < q1 - 1.5 * iqr) | (s > q3 + 1.5 * iqr)).sum())
         out_3s = int((np.abs(s - mean) > 3 * sd).sum())
         wiersze.append({
@@ -162,9 +139,6 @@ def statystyki_age(df):
 
 
 def tabele_czestosci(df):
-    """Tabele częstości cech skokowych z uwzględnieniem braków danych (value_counts(dropna=False))
-    oraz odsetkiem braków Y w każdej kategorii.
-    Podział skal pomiarowych. Zestawienie braków w kategoriach."""
     wynik = {}
     n_tot = len(df)
     for col in CECHY_SKOKOWE:
@@ -212,7 +186,6 @@ def tabele_czestosci(df):
 
 
 def tabela_wynik_kanal(df):
-    """Tabela krzyżowa contact x y_newdeposit (z brakami) oraz % zakupów z 95% CI Wilsona."""
     wiersze = []
     for kod in [0, 1, 2]:
         sub = df[df["contact"] == kod]
@@ -261,8 +234,7 @@ def tabela_wynik_kanal(df):
 
 
 def analiza_brakow(df):
-    """Zakres braków w każdej zmiennej oraz identyfikacja wzorca z macierzy indykatorowej M.""" #jak w wykładzie (zab_cz_1), s. 73-74 (macierz braków M), s. 89-90 (wzorzec monotoniczny).
-    # 1. Zakres braków per zmienna: jak w wykładzie (zab_cz_1), s. 46, 73-74
+    # 1. Zakres braków per zmienna
     wiersze = []
     n_tot = len(df)
     for col in ZMIENNE_ANALIZOWANE:
@@ -278,9 +250,9 @@ def analiza_brakow(df):
         })
     tab_braki = pd.DataFrame(wiersze).set_index("Zmienna")
 
-    # 2. Macierz indykatorowa braków M = [m_ij]: jak w wykładzie (zab_cz_1), s. 73-74, 89-90
+    # 2. Macierz indykatorowa braków M = [m_ij]
     M_mat = df[ZMIENNE_ANALIZOWANE].isna().astype(int)
-    # Sortujemy kolumny rosnąco wg liczby braków, aby sprawdzić monotoniczność: jak w wykładzie (zab_cz_1), s. 89
+    # Sortujemy kolumny rosnąco wg liczby braków, aby sprawdzić monotoniczność
     kol_posort = tab_braki["Braki (n)"].sort_values().index.tolist()
     M_posort = M_mat[kol_posort]
     wzorce = M_posort.value_counts().reset_index(name="Liczebność")
@@ -312,12 +284,10 @@ def analiza_brakow(df):
 # 2. WYKRESY (zapis do OUT_DIR)
 # =====================================================================================
 def wykres_age(df, sciezka):
-    """Histogram (sns.histplot jak w kodzie "DM_Approach_py (1).ipynb"), histogram porównawczy wg M
-    oraz wykres pudełkowy: jak w wykładzie (zab_cz_1), s. 17-18."""
     with plt.rc_context(STYL):
         fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(12.2, 4.0))
 
-        # Panel A: Histogram gęstości age ogółem — sns.histplot jak w kodzie "DM_Approach_py (1).ipynb"
+        # Panel A: Histogram gęstości age ogółem
         sns.histplot(
             df["age"], stat="density", bins=30, ax=ax1,
             color=KOLOR["seria1"], alpha=0.55, edgecolor=KOLOR["tlo"], linewidth=0.5,
@@ -335,7 +305,7 @@ def wykres_age(df, sciezka):
         ax1.set_title("A. Rozkład wieku (cała próba)")
         ax1.legend(loc="upper right")
 
-        # Panel B: Histogram porównawczy wg M=0 vs M=1 — jak w wykładzie (zab_cz_1), s. 17
+        # Panel B: Histogram porównawczy wg M=0 vs M=1
         obs_age = df.loc[df["M"] == 0, "age"]
         mis_age = df.loc[df["M"] == 1, "age"]
         sns.histplot(
@@ -356,7 +326,7 @@ def wykres_age(df, sciezka):
         ax2.set_title("B. Rozkład wieku wg statusu braku Y")
         ax2.legend(loc="upper right")
 
-        # Panel C: Wykres pudełkowy age (ogółem oraz wg M=0 / M=1) — jak w wykładzie (zab_cz_1), s. 18
+        # Panel C: Wykres pudełkowy age (ogółem oraz wg M=0 / M=1)
         dane_box = [df["age"].to_numpy(), obs_age.to_numpy(), mis_age.to_numpy()]
         kolory_box = [KOLOR["neutral"], KOLOR["seria1"], KOLOR["brak"]]
         bp = ax3.boxplot(
@@ -391,14 +361,12 @@ def wykres_age(df, sciezka):
 
 
 def wykres_cechy_skokowe(tab_czestosci, sciezka):
-    """Wykresy słupkowe rozkładu wszystkich 5 cech skokowych (z kategorią braków w y_newdeposit):
-    jak w wykładzie (zab_cz_1), s. 14, 46; układ wielopanelowy: WŁASNE."""
     tytuly = {
         "education": "Wykształcenie (education)",
         "house_loan": "Kredyt mieszkaniowy (house_loan)",
         "poutcome": "Poprzednia kampania (poutcome)",
         "contact": "Kanał komunikacji (contact)",
-        "y_newdeposit": "Zakup produktu — zmienna celu (y_newdeposit)",
+        "y_newdeposit": "Zakup produktu, zmienna celu (y_newdeposit)",
     }
     with plt.rc_context(STYL):
         fig = plt.figure(figsize=(11.5, 6.4))
@@ -453,8 +421,6 @@ def wykres_cechy_skokowe(tab_czestosci, sciezka):
 
 
 def wykres_wynik_badania(tab_wynik_kanal, sciezka):
-    """Graficzna ocena wyników badania: (A) pełna struktura Y z brakami wg kanału,
-    (B) odsetek zakupów wśród obserwacji kompletnych z 95% CI Wilsona (WŁASNE)."""
     sub = tab_wynik_kanal.loc[[ETYKIETY_CONTACT[0], ETYKIETY_CONTACT[1], ETYKIETY_CONTACT[2]]]
     kanaly = sub.index.tolist()
     x = np.arange(len(kanaly))
@@ -462,7 +428,7 @@ def wykres_wynik_badania(tab_wynik_kanal, sciezka):
     with plt.rc_context(STYL):
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10.8, 4.3))
 
-        # Panel A: 100% wykres skumulowany (Y=1, Y=0, NaN) — WŁASNE
+        # Panel A: 100% wykres skumulowany (Y=1, Y=0, NaN)
         p_y1 = 100.0 * sub["Zakup (Y=1)"] / sub["Ogółem (n)"]
         p_y0 = 100.0 * sub["Brak zakupu (Y=0)"] / sub["Ogółem (n)"]
         p_na = 100.0 * sub["Braki (NaN)"] / sub["Ogółem (n)"]
@@ -488,7 +454,7 @@ def wykres_wynik_badania(tab_wynik_kanal, sciezka):
         ax1.set_title("A. Struktura zmiennej Y (z brakami) wg kanału")
         ax1.legend(loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=3)
 
-        # Panel B: Odsetek zakupów wśród M=0 + 95% CI Wilsona — WŁASNE
+        # Panel B: Odsetek zakupów wśród M=0 + 95% CI Wilsona
         y_pct = sub["Zakup wśród M=0 [%]"].to_numpy()
         err_lo = y_pct - sub["CI 95% dolna [%]"].to_numpy()
         err_hi = sub["CI 95% górna [%]"].to_numpy() - y_pct
@@ -520,8 +486,6 @@ def wykres_wynik_badania(tab_wynik_kanal, sciezka):
 
 
 def wykres_braki(df, tab_braki, wzorce, tab_braki_wiek, sciezka):
-    """Wizualizacja wzorca braków (jak w wykładzie (zab_cz_1), s. 90) oraz rozkładu braków
-    wg grup wieku i kanału komunikacji (WŁASNE)."""
     kol_posort = tab_braki["Braki (n)"].sort_values().index.tolist()
     mat = wzorce[kol_posort].to_numpy()  # 0 = znane, 1 = brak
 
@@ -530,7 +494,7 @@ def wykres_braki(df, tab_braki, wzorce, tab_braki_wiek, sciezka):
             1, 2, figsize=(11.6, 4.3), gridspec_kw={"width_ratios": [1.05, 1.25]}
         )
 
-        # Panel A: Macierz wzorca braków — jak w wykładzie (zab_cz_1), s. 90
+        # Panel A: Macierz wzorca braków
         n_w, n_k = mat.shape
         for i in range(n_w):
             for j in range(n_k):
@@ -581,7 +545,7 @@ def wykres_braki(df, tab_braki, wzorce, tab_braki_wiek, sciezka):
         )
         ax1.set_title("A. Wzorzec braków danych (monotoniczny)", pad=36)
 
-        # Panel B: Rozkład odsetka braków Y wg wieku i kanału komunikacji (WŁASNE)
+        # Panel B: Rozkład odsetka braków Y wg wieku i kanału komunikacji
         x = np.arange(len(tab_braki_wiek))
         ax2.grid(axis="y", color=KOLOR["siatka"], lw=0.8)
         ax2.set_axisbelow(True)
@@ -612,34 +576,21 @@ def wykres_braki(df, tab_braki, wzorce, tab_braki_wiek, sciezka):
 # 3. URUCHOMIENIE SEKCJI
 # =====================================================================================
 def uruchom(df):
-    """TODO (osoba 1):
-      - podział cech: ciągła (age) i skokowe (education, house_loan, poutcome, contact, y_newdeposit)
-      - age: statystyki opisowe, histogram, boxplot (także wg M)
-      - cechy skokowe: tabele częstości z brakami (value_counts(dropna=False)), wykresy słupkowe
-      - wynik badania: tabela contact x y_newdeposit (z brakami), % zakupów wg kanału + 95% CI
-      - zakres braków: liczba i % braków w każdej zmiennej; wzorzec braków (monotoniczny?)
-      - wykresy zapisujemy do OUT_DIR / "fig1_....png", tabele drukujemy print(...)
-
-    ZWRACA słownik (dla osoby 5, do raportu), klucze:
-      tab_struktura_age, tab_czestosci (dict: zmienna -> DataFrame), tab_wynik_kanal, tab_braki
-    oraz dodatkowe klucze pomocnicze:
-      tab_wzorzec_brakow, tab_braki_wiek, wykresy
-    """
     print("\n=== 1. STRUKTURA DANYCH ===")
     wyniki = {}
 
-    # 1.1. Podstawowe informacje o zbiorze i kontrola jakości danych: jak w wykładzie (zab_cz_1), s. 35, 46-48
+    # 1.1. Podstawowe informacje o zbiorze i kontrola jakości danych
     print(f"Liczba obserwacji (n): {_calkowita(len(df))}")
     print(f"Liczba zmiennych (k):  {len(ZMIENNE_ANALIZOWANE)} "
           f"(1 ciągła: {CECHA_CIAGLA}; {len(CECHY_SKOKOWE)} skokowych: {', '.join(CECHY_SKOKOWE)})")
 
-    # Kontrola ukrytych znaków/spacji w cechach tekstowych: jak w wykładzie (zab_cz_1), s. 47-48
+    # Kontrola ukrytych znaków/spacji w cechach tekstowych
     tekstowe = ["education", "house_loan", "poutcome"]
     bledy_spacje = sum(int(df[c].astype(str).str.strip().ne(df[c].astype(str)).sum()) for c in tekstowe)
     print(f"Kontrola jakości: zbędne spacje w cechach tekstowych = {bledy_spacje}, "
           f"zakres wieku = [{df['age'].min()}, {df['age'].max()}] lat (brak wartości nieprawidłowych).")
 
-    # 1.2. Cecha ciągła: age — jak w wykładzie (zab_cz_1), s. 17-18, 47, 70
+    # 1.2. Cecha ciągła: age
     tab_age = statystyki_age(df)
     print("\n--- CECHA CIĄGŁA: AGE (statystyki opisowe i obserwacje odstające) ---")
     print(tab_age.to_string(formatters={
@@ -654,20 +605,20 @@ def uruchom(df):
         "Skośność": "{:.2f}".format,
     }))
 
-    # 1.3. Cechy skokowe: tabele częstości z brakami — jak w wykładzie (zab_cz_1), s. 46; braki w kat.: WŁASNE
+    # 1.3. Cechy skokowe: tabele częstości z brakami
     tab_czest = tabele_czestosci(df)
     print("\n--- CECHY SKOKOWE: TABELE CZĘSTOŚCI (z brakami danych) ---")
     for col, tab in tab_czest.items():
         typ, skala, opis = OPIS_CECH[col]
-        print(f"\nZmienna: {col} ({skala}) — {opis}")
+        print(f"\nZmienna: {col} ({skala}) - {opis}")
         print(tab.to_string())
 
-    # 1.4. Wynik badania: tabela krzyżowa contact x y_newdeposit + 95% CI Wilsona (WŁASNE)
+    # 1.4. Wynik badania: tabela krzyżowa contact x y_newdeposit + 95% CI Wilsona
     tab_wynik = tabela_wynik_kanal(df)
     print("\n--- WYNIK BADANIA WG KANAŁU KOMUNIKACJI (contact x y_newdeposit, 95% CI Wilsona) ---")
     print(tab_wynik.to_string())
 
-    # 1.5. Zakres, macierz i wzorzec braków danych — jak w wykładzie (zab_cz_1), s. 46, 73-74, 89-90
+    # 1.5. Zakres, macierz i wzorzec braków danych
     tab_braki, wzorce, czy_monotoniczny, tab_braki_wiek = analiza_brakow(df)
     print("\n--- ZAKRES I SKALE POMIAROWE ZMIENNYCH ---")
     print(tab_braki.to_string())
@@ -675,12 +626,12 @@ def uruchom(df):
     print("\n--- WZORZEC BRAKÓW DANYCH Z MACIERZY M ---")
     print(wzorce.to_string(index=False))
     print(f"Czy wzorzec jest monotoniczny? {'TAK' if czy_monotoniczny else 'NIE'} "
-          "(braki występują wyłącznie w jednej zmiennej: y_newdeposit — przypadek item nonresponse).")
+          "(braki występują wyłącznie w jednej zmiennej: y_newdeposit, przypadek item nonresponse).")
 
     print("\n--- ROZKŁAD BRAKÓW Y WG PRZEDZIAŁÓW WIEKU I KANAŁU KOMUNIKACJI ---")
     print(tab_braki_wiek.to_string())
 
-    # Kontrola progu wiekowego braków w kanale A (WŁASNE)
+    # Kontrola progu wiekowego braków w kanale A
     braki_a_45 = int(df.loc[(df["contact"] == 1) & (df["age"] <= 45), "M"].sum())
     n_a_45 = int(((df["contact"] == 1) & (df["age"] <= 45)).sum())
     braki_a_46 = float(100.0 * df.loc[(df["contact"] == 1) & (df["age"] >= 46), "M"].mean())
@@ -696,7 +647,7 @@ def uruchom(df):
     ]
     print("\nZapisane wykresy:", ", ".join(p.name for p in wykresy))
 
-    # 1.7. Podsumowanie sekcji 1 i skutki braków danych: jak w wykładzie (zab_cz_1), s. 75-81, 107-108
+    # 1.7. Podsumowanie sekcji 1 i skutki braków danych
     print("\n--- WNIOSKI ---")
     print("1. Zbiór kb19 obejmuje 11 304 klientów opisanych 1 cechą ciągłą (age) i 5 cechami skokowymi.")
     print("2. Braki danych występują wyłącznie w zmiennej celu y_newdeposit: "

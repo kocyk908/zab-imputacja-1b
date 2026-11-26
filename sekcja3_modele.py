@@ -213,7 +213,7 @@ def uruchom(df, zmienne_imputacji=None):
 
     p_LRT = stats.chi2.sf(LR, df_diff)
 
-    print("\n--- WYBOR MODELU IMPUTACYJNEGO ---")
+    print("\n--- WYBÓR MODELU IMPUTACYJNEGO ---")
     print(f"AIC bez age²: {aic_1:.4f}")
     print(f"AIC z age²: {aic_2:.4f}")
     print(f"Statystyka LRT: {LR:.4f}")
@@ -280,6 +280,9 @@ def uruchom(df, zmienne_imputacji=None):
         f"{wynik_cc['OR_high']:.4f})"
     )
     print(f"p-value: {wynik_cc['p']:.4f}")
+
+    print("\n--- PARAMETRY CC ---")
+    print(tab_param_cc.round(4))
 
     # MULTIPLE IMPUTATION (MAR)
 

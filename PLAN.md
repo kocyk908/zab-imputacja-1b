@@ -57,7 +57,7 @@ przestają być istotne. `education` nie należy do modelu, ale wyjaśnia Y, wi�
 | Krok | Źródło |
 |---|---|
 | Tabela CC vs MI: OR(A vs B), CI, p | jak w wykładzie (zab_cz_1), s. 87: porównanie wyników przy różnych założeniach |
-| **Analiza wrażliwości (MNAR, tipping point)** | jak w wykładzie (zab_cz_1), s. 75, 87, 97, 156. Wykład tylko wspomina tę metodę, implementacja delta-adjustment to **WŁASNE** |
+| **Analiza wrażliwości (MNAR, tipping point)** | jak w wykładzie (zab_cz_1), s. 75 (tipping point), 87, 97 (analiza wrażliwości). Wykład tylko wspomina tę metodę, implementacja delta-adjustment to **WŁASNE** |
 | (opcjonalnie) IPW, czyli ważenie odwrotnością P(odpowiedzi) | jak w wykładzie (zab_cz_1), s. 101–103, Horvitz-Thompson / propensity |
 
 ### 5. Miara diagnostyczna imputacji
